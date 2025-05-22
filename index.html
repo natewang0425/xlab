@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Export</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        #dashboard-content {
+            width: 800px;
+            height: 600px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        #exportPdfButton {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #exportPdfButton:hover {
+            background-color: #45a049;
+        }
+        .chart-placeholder {
+            width: 300px;
+            height: 200px;
+            margin: 10px;
+            padding: 10px;
+            text-align: center;
+            display: inline-block; /* To place charts side-by-side if space allows */
+        }
+        .chart1 {
+            background-color: #add8e6; /* Light blue */
+        }
+        .chart2 {
+            background-color: #90ee90; /* Light green */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="dashboard-content">
+        <h2>Sample Dashboard Title</h2>
+        <p>This is some sample content that will be exported to the PDF.</p>
+        <div class="chart-placeholder chart1">Mock Chart 1</div>
+        <div class="chart-placeholder chart2">Mock Chart 2</div>
+    </div>
+
+    <button id="exportPdfButton">Export to PDF</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const { jsPDF } = window.jspdf;
+
+            document.getElementById('exportPdfButton').addEventListener('click', function () {
+                const dashboardContent = document.getElementById('dashboard-content');
+
+                html2canvas(dashboardContent, { 
+                    scale: 2, // Increase scale for better quality
+                    useCORS: true // In case images are from other domains
+                }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    
+                    // Initialize jsPDF. Default is portrait, A4 size.
+                    // Page dimensions in mm for A4: 210 x 297
+                    const pdf = new jsPDF('p', 'mm', 'a4'); 
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+                    // Get image dimensions
+                    const imgProps = pdf.getImageProperties(imgData);
+                    const imgWidth = imgProps.width;
+                    const imgHeight = imgProps.height;
+
+                    // Calculate scaling factor to fit width
+                    let ratio = 1;
+                    if (imgWidth > pdfWidth) {
+                        ratio = pdfWidth / imgWidth;
+                    }
+                    
+                    const scaledWidth = imgWidth * ratio;
+                    const scaledHeight = imgHeight * ratio;
+
+                    // Check if scaled height fits the page, if not, may need multi-page or further scaling (simplified here)
+                    if (scaledHeight > pdfHeight) {
+                        // Simplified: scale to fit height if it's too tall after width scaling
+                        // This might make it too small if content is very tall.
+                        // A more robust solution might involve splitting content across pages.
+                        ratio = pdfHeight / imgHeight; 
+                        scaledWidth = imgWidth * ratio;
+                        scaledHeight = imgHeight * ratio;
+                    }
+                    
+                    // Center the image on the page (optional)
+                    const x = (pdfWidth - scaledWidth) / 2;
+                    const y = 10; // Add some margin from the top
+
+                    pdf.addImage(imgData, 'PNG', x, y, scaledWidth, scaledHeight);
+                    pdf.save('dashboard.pdf');
+                }).catch(error => {
+                    console.error("Error generating PDF: ", error);
+                    alert("Error generating PDF. Check the console for details.");
+                });
+            });
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log("Running PDF Export Basic Test...");
+            let allTestsPassed = true;
+
+            // 1. Verify jsPDF
+            if (window.jspdf && typeof window.jspdf.jsPDF === 'function') {
+                console.log("PDF Export Basic Test: jsPDF loaded successfully.");
+            } else {
+                console.error("PDF Export Basic Test: jsPDF not loaded or jsPDF.jsPDF is not a function.");
+                allTestsPassed = false;
+            }
+
+            // 2. Verify html2canvas
+            if (typeof window.html2canvas === 'function') {
+                console.log("PDF Export Basic Test: html2canvas loaded successfully.");
+            } else {
+                console.error("PDF Export Basic Test: html2canvas not loaded or not a function.");
+                allTestsPassed = false;
+            }
+
+            // 3. Verify exportPdfButton
+            if (document.getElementById('exportPdfButton')) {
+                console.log("PDF Export Basic Test: Export button found.");
+            } else {
+                console.error("PDF Export Basic Test: Export button not found.");
+                allTestsPassed = false;
+            }
+
+            // Final summary message
+            if (allTestsPassed) {
+                console.log("PDF Export Basic Test: All checks passed (jsPDF, html2canvas, export button found).");
+            } else {
+                console.error("PDF Export Basic Test: One or more checks failed.");
+            }
+        });
+    </script>
+</body>
+</html>
