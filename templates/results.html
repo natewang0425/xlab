@@ -1,0 +1,92 @@
+<!doctype html>
+<title>Process Data and Generate Charts</title>
+<body>
+  <h1>Data from: {{ filename }}</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class=flashes>
+      {% for category, message in messages %}
+        <li class="{{ category }}">{{ message }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <h2>Columns in the file:</h2>
+{% if columns %}
+  <ul>
+    {% for column in columns %}
+      <li>{{ column }}</li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No columns found or file could not be processed.</p>
+{% endif %}
+
+<hr>
+
+<h2>Generate Chart</h2>
+<form action="{{ url_for('generate_chart') }}" method="post">
+  <label for="chart_type">Select Chart Type:</label>
+  <select name="chart_type" id="chart_type">
+    <option value="histogram">Histogram</option>
+    <option value="bar">Bar Chart</option>
+    <!-- Add other chart types here -->
+  </select>
+  <br><br>
+
+  <!-- Histogram Options -->
+  <div id="histogram_options">
+    <label for="hist_column">Select Column for Histogram (Numerical):</label>
+    <select name="hist_column" id="hist_column">
+      {% for column in numerical_columns %}
+        <option value="{{ column }}">{{ column }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <br>
+
+  <!-- Bar Chart Options -->
+  <div id="bar_options" style="display:none;">
+    <label for="bar_x_column">Select X-axis Column (Categorical):</label>
+    <select name="bar_x_column" id="bar_x_column">
+      {% for column in categorical_columns %}
+        <option value="{{ column }}">{{ column }}</option>
+      {% endfor %}
+    </select>
+    <br>
+    <label for="bar_y_column">Select Y-axis Column (Numerical):</label>
+    <select name="bar_y_column" id="bar_y_column">
+      {% for column in numerical_columns %}
+        <option value="{{ column }}">{{ column }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <br>
+  
+  <input type="submit" value="Generate Chart">
+</form>
+
+<script>
+  // Show/hide options based on selected chart type
+  document.getElementById('chart_type').addEventListener('change', function() {
+    var hist_options = document.getElementById('histogram_options');
+    var bar_options = document.getElementById('bar_options');
+    if (this.value === 'histogram') {
+      hist_options.style.display = 'block';
+      bar_options.style.display = 'none';
+    } else if (this.value === 'bar') {
+      hist_options.style.display = 'none';
+      bar_options.style.display = 'block';
+    } else {
+      hist_options.style.display = 'none';
+      bar_options.style.display = 'none';
+    }
+  });
+  // Initialize visibility based on current selection
+  document.getElementById('chart_type').dispatchEvent(new Event('change'));
+</script>
+
+<hr>
+<p><a href="{{ url_for('upload_file') }}">Upload another file</a></p>
